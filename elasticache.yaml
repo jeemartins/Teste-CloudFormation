@@ -1,0 +1,123 @@
+---
+AWSTemplateFormatVersion: 2010-09-09
+
+
+#Description: >
+#  This template shows how to use AWS CodePipeline and AWS CodeBuild to build an
+#  automated continuous deployment pipeline to Amazon Elastic Container Service
+#  (Amazon ECS) using clusters powered by AWS Fargate or Amazon Elastic Compute
+#  Cloud (Amazon EC2).
+
+
+Parameters:
+  #LaunchType:
+  #  Type: String
+  #  Default: Fargate
+  #  AllowedValues:
+  #    - Fargate
+  #    - EC2
+  #  Description: >
+  #    The launch type for your service. Selecting EC2 will create an Auto
+  #    Scaling group of t2.micro instances for your cluster. See
+  #    https://docs.aws.amazon.com/AmazonECS/latest/developerguide/launch_types.html
+  #    to learn more about launch types.
+
+  GitHubUser:
+    Type: String
+    Description: Your username on GitHub.
+
+  GitHubRepo:
+    Type: String
+    Default: Teste-CloudFormation
+    Description: The repo name of the sample service.
+
+  GitHubBranch:
+    Type: String
+    Default: main
+    Description: The branch of the repo to continuously deploy.
+
+  GitHubToken:
+    Type: String
+    NoEcho: true
+    Description: >
+      Token for the user specified above. (https://github.com/settings/tokens)
+
+  #TemplateBucket:
+  #  Type: String
+  #  Default: teste-pipeline-node
+  #  Description: >
+  #    The S3 bucket from which to fetch the templates used by this stack.
+
+
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterLabels:
+      GitHubUser:
+        default: "User"
+      GitHubRepo:
+        default: "Repo"
+      GitHubBranch:
+        default: "Branch"
+      GitHubToken:
+        default: "Personal Access Token"
+      LaunchType:
+        default: "Launch Type"
+    ParameterGroups:
+      - Label:
+          default: Cluster Configuration
+        Parameters:
+          - LaunchType
+      - Label:
+          default: GitHub Configuration
+        Parameters:
+          - GitHubRepo
+          - GitHubBranch
+          - GitHubUser
+          - GitHubToken
+      #- Label:
+      #    default: Stack Configuration
+      #  Parameters:
+      #    - TemplateBucket
+
+Resources:
+  ElastiCache:
+    Type: AWS::ElastiCache::CacheCluster
+    Properties: 
+      #AutoMinorVersionUpgrade: Boolean
+      AZMode: single-az
+      CacheNodeType: cache.t3.medium
+      CacheParameterGroupName: poc
+      CacheSecurityGroupNames: 
+        - teste-poc
+      CacheSubnetGroupName: default
+      ClusterName: teste-poc
+      Engine: redis
+      EngineVersion: 5.0.0
+      LogDeliveryConfigurations: 
+        - LogDeliveryConfigurationRequest #descobrir o que isso significa
+      #NotificationTopicArn: String
+      NumCacheNodes: 3
+      #Port: Integer (O número da porta na qual cada um dos nós de cache aceita conexões)
+      #PreferredAvailabilityZone: String
+      #PreferredAvailabilityZones: 
+      #  - String
+      #PreferredMaintenanceWindow: String
+      #SnapshotArns: 
+      #  - String
+      SnapshotName: poc-teste
+      SnapshotRetentionLimit: 2
+      SnapshotWindow: 05:00-09:00
+      #Tags: 
+      #  - Tag
+      VpcSecurityGroupIds: 
+        - poc-teste
+
+  Subrede:
+    Type: AWS::ElastiCache::SubnetGroup
+    Properties: 
+      CacheSubnetGroupName: mysubnetgroup
+      Description: Teste da poc
+      #SubnetIds: 
+      #  - String
+      #Tags: 
+      #  - Tag
